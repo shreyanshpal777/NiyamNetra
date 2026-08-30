@@ -1,0 +1,74 @@
+@import "tailwindcss";
+
+:root {
+  color: #1c1927;
+  background: #aebad1;
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 6% 24%, rgba(116, 96, 145, 0.18), transparent 24rem),
+    linear-gradient(180deg, #aebad1 0%, #bcc5d5 58%, #d6d4db 100%);
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid #403454;
+  outline-offset: 3px;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+@theme {
+  --color-canvas: #f9f8f5;
+  --color-ink: #1c1927;
+  --color-muted: #696474;
+  --color-plum: #292239;
+  --color-plum-soft: #403454;
+  --color-lavender: #e7e4f5;
+  --color-lavender-deep: #bdb8da;
+  --color-line: #e4e0dc;
+  --color-pass: #2f7d54;
+  --color-review: #a87520;
+  --color-fail: #b14b55;
+}
+
+.glass-canvas {
+  background: rgba(250, 249, 246, 0.96);
+  box-shadow: 0 24px 90px rgba(43, 37, 58, 0.18);
+}
+
+.display-heading {
+  letter-spacing: 0;
+  line-height: 0.95;
+}
+
+.soft-noise {
+  background-image:
+    radial-gradient(circle at 20% 15%, rgba(255, 255, 255, 0.56), transparent 10rem),
+    radial-gradient(circle at 80% 72%, rgba(83, 71, 117, 0.22), transparent 18rem);
+}
