@@ -1,32 +1,54 @@
-from app.core.config import get_settings
-from app.models.ocr import OCRWord
+"""
+OCR extraction using PaddleOCR.
+
+Loads the OCR engine once (lazy singleton, since model load is slow) and
+exposes run_ocr(), which returns text + confidence + pixel bounding boxes
+for every detected text region. Physical (mm) measurement is applied
+separately in measurement.py once ArUco calibration is available.
+"""
+from __future__ import annotations
+
+import numpy as np
+
+_ocr_engine = None
 
 
-class OCRService:
-    def __init__(self, language: str | None = None) -> None:
-        self.language = language or get_settings().ocr_language
-        self._ocr = None
+def _get_engine():
+    global _ocr_engine
+    if _ocr_engine is None:
+        from paddleocr import PaddleOCR
 
-    def _load_ocr(self) -> None:
-        try:
-            from paddleocr import PaddleOCR  # type: ignore
+        _ocr_engine = PaddleOCR(use_angle_cls=True, lang="en", show_log=False)
+    return _ocr_engine
 
-            self._ocr = PaddleOCR(use_angle_cls=True, lang=self.language)
-        except Exception:
-            self._ocr = None
 
-    def run_ocr(self, image_path: str) -> list[OCRWord]:
-        if self._ocr is None:
-            self._load_ocr()
-        if self._ocr is None:
-            return [
-                OCRWord(text="Premium Wheat Flour", confidence=0.98, bbox=[[100, 120], [460, 120], [460, 154], [100, 154]], height_px=34, height_mm=2.2),
-                OCRWord(text="MRP Rs. 150", confidence=0.97, bbox=[[100, 220], [310, 220], [310, 248], [100, 248]], height_px=28, height_mm=1.82),
-                OCRWord(text="Net Weight 500 g", confidence=0.96, bbox=[[100, 280], [390, 280], [390, 306], [100, 306]], height_px=26, height_mm=1.74),
-                OCRWord(text="Manufacturer XYZ Foods", confidence=0.94, bbox=[[100, 340], [520, 340], [520, 364], [100, 364]], height_px=24, height_mm=1.58),
-                OCRWord(text="Batch A2345", confidence=0.93, bbox=[[100, 400], [260, 400], [260, 422], [100, 422]], height_px=22, height_mm=1.42),
-                OCRWord(text="Extra wholesome", confidence=0.91, bbox=[[100, 460], [340, 460], [340, 482], [100, 482]], height_px=22, height_mm=1.42),
-            ]
-        return [
-            OCRWord(text="MRP Rs. 150", confidence=0.97, bbox=[[100, 220], [310, 220], [310, 248], [100, 248]], height_px=28, height_mm=1.82)
-        ]
+def run_ocr(image: np.ndarray, min_confidence: float = 0.4) -> list[dict]:
+    """
+    Run OCR on a BGR numpy image.
+
+    Returns a list of dicts:
+        {
+            "text": str,
+            "confidence": float,          # 0-1
+            "bbox": list[list[float]],    # 4 (x, y) points, TL,TR,BR,BL
+        }
+    """
+    engine = _get_engine()
+    raw_result = engine.ocr(image, cls=True)
+
+    if not raw_result or raw_result[0] is None:
+        return []
+
+    words = []
+    for line in raw_result[0]:
+        bbox, (text, confidence) = line
+        if confidence < min_confidence:
+            continue
+        words.append(
+            {
+                "text": text,
+                "confidence": float(confidence),
+                "bbox": [[float(x), float(y)] for x, y in bbox],
+            }
+        )
+    return words
