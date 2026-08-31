@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     ocr_language: str = "en"
     aruco_marker_size_mm: float = 50.0
     upload_dir: Path = Path("data/uploads")
+    annotated_dir: Path = Path("data/annotated")
     report_dir: Path = Path("data/reports")
     device: str = "cpu"
 
@@ -24,5 +25,6 @@ class Settings(BaseSettings):
 def get_settings() -> Settings:
     settings = Settings()
     settings.upload_dir.mkdir(parents=True, exist_ok=True)
+    settings.annotated_dir.mkdir(parents=True, exist_ok=True)
     settings.report_dir.mkdir(parents=True, exist_ok=True)
     return settings
