@@ -8,3 +8,13 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 .DS_Store
+__pycache__/
+venv/
+*.pyc
+
+data/
+
+data/uploads/
+data/reports/
+data/annotated/
+
