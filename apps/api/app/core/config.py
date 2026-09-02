@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     mongodb_uri: str = "mongodb://localhost:27017"
     mongodb_database: str = "inspector_ai"
     groq_api_key: str = ""
-    llm_model: str = "llama-3.1-8b-instant"
+    llm_model: str = "openai/gpt-oss-20b"
     yolo_model: str = ""
     ocr_language: str = "en"
     aruco_marker_size_mm: float = 50.0

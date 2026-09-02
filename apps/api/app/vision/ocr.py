@@ -9,24 +9,48 @@ class OCRService:
 
     def _load_ocr(self) -> None:
         try:
+            import logging
+            logging.getLogger("ppocr").setLevel(logging.WARNING)
             from paddleocr import PaddleOCR  # type: ignore
 
-            self._ocr = PaddleOCR(use_angle_cls=True, lang=self.language)
-        except Exception:
+            self._ocr = PaddleOCR(use_angle_cls=True, lang=self.language, show_log=False)
+        except Exception as e:
+            import logging
+            logging.error(f"CRITICAL ERROR LOADING PADDLEOCR: {e}")
+            import traceback
+            traceback.print_exc()
             self._ocr = None
 
     def run_ocr(self, image_path: str) -> list[OCRWord]:
         if self._ocr is None:
             self._load_ocr()
+        
         if self._ocr is None:
+            # Fallback for dev environments without PaddleOCR installed
             return [
                 OCRWord(text="Premium Wheat Flour", confidence=0.98, bbox=[[100, 120], [460, 120], [460, 154], [100, 154]], height_px=34, height_mm=2.2),
-                OCRWord(text="MRP Rs. 150", confidence=0.97, bbox=[[100, 220], [310, 220], [310, 248], [100, 248]], height_px=28, height_mm=1.82),
-                OCRWord(text="Net Weight 500 g", confidence=0.96, bbox=[[100, 280], [390, 280], [390, 306], [100, 306]], height_px=26, height_mm=1.74),
-                OCRWord(text="Manufacturer XYZ Foods", confidence=0.94, bbox=[[100, 340], [520, 340], [520, 364], [100, 364]], height_px=24, height_mm=1.58),
-                OCRWord(text="Batch A2345", confidence=0.93, bbox=[[100, 400], [260, 400], [260, 422], [100, 422]], height_px=22, height_mm=1.42),
-                OCRWord(text="Extra wholesome", confidence=0.91, bbox=[[100, 460], [340, 460], [340, 482], [100, 482]], height_px=22, height_mm=1.42),
             ]
-        return [
-            OCRWord(text="MRP Rs. 150", confidence=0.97, bbox=[[100, 220], [310, 220], [310, 248], [100, 248]], height_px=28, height_mm=1.82)
-        ]
+            
+        results = self._ocr.ocr(image_path, cls=True)
+        words = []
+        if results and results[0]:
+            for line in results[0]:
+                bbox = line[0]
+                text = line[1][0]
+                conf = line[1][1]
+                
+                # Calculate text height in pixels
+                left_h = abs(bbox[3][1] - bbox[0][1])
+                right_h = abs(bbox[2][1] - bbox[1][1])
+                height_px = (left_h + right_h) / 2.0
+                
+                words.append(
+                    OCRWord(
+                        text=text,
+                        confidence=conf,
+                        bbox=bbox,
+                        height_px=round(height_px, 2),
+                        height_mm=0.0 # Will be populated by the pipeline using homography
+                    )
+                )
+        return words

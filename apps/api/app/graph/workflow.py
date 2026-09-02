@@ -1,8 +1,8 @@
 from langgraph.graph import StateGraph, END
-from app.graph.state import InspectionState
+from app.pipeline.state import InspectionState
 from app.vision.pipeline import detect_aruco, calculate_homography, pixel_to_mm, YOLODetector, OCRService
-from app.llm.core import extract_product_data
-from app.compliance.engine import evaluate_compliance
+from app.llm.client import extract_product_data
+from app.compliance.engine import compliance_engine
 
 # Initialize services
 yolo = YOLODetector()
@@ -36,7 +36,7 @@ def extract_semantics(state: InspectionState) -> dict:
     return {"product_data": product_data}
 
 def evaluate_rules(state: InspectionState) -> dict:
-    results, score, status = evaluate_compliance(state["product_data"], state["ocr_results"])
+    results, score, status = compliance_engine.evaluate(state["product_data"], state["ocr_results"])
     return {
         "rule_results": results,
         "score": score,
