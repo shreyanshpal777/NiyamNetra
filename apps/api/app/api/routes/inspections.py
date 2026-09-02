@@ -103,6 +103,14 @@ async def process_inspection_endpoint(inspection_id: str):
         measurements=final_state.get("measurements", {}),
     )
 
+    annotated_img = final_state.get("annotated_image")
+    if annotated_img is not None:
+        import cv2
+        ann_path = settings.annotated_dir / f"{inspection_id}_annotated.jpg"
+        cv2.imwrite(str(ann_path), annotated_img)
+        await save_annotated_image_path(inspection_id, str(ann_path))
+
+
     # Step 4: Save extracted product data
     product_data = final_state.get("product_data")
     if product_data:
